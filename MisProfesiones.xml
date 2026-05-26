@@ -1,0 +1,154 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+	
+	<Frame name="FrameProfresionTemplate" virtual="true">
+		<Size x="280" y="40"/>
+		<Frames>
+			<Button name="$parentIcon" inherits="SecureActionButtonTemplate">
+				<Size x="32" y="32"/>
+				<Anchors>
+					<Anchor point="LEFT" x="5" y="0"/>
+				</Anchors>
+				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentTexture"/>
+					</Layer>
+				</Layers>
+			</Button>
+			
+			<Frame name="$parentNameFrame">
+				<Size x="180" y="20"/>
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentIcon" relativePoint="RIGHT" x="10" y="0"/>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString name="$parentText" inherits="GameFontHighlight" text="Profesión" justifyH="LEFT">
+							<Color r="0.25" g="0.12" b="0.02"/>
+						</FontString>
+					</Layer>
+				</Layers>
+			</Frame>
+
+			<Button name="$parentUnlearnBtn" frameStrata="MEDIUM" toplevel="true" inherits="UIPanelButtonTemplate" text="X">
+				<Size x="22" y="22"/>
+				<Anchors>
+					<Anchor point="RIGHT" x="-5" y="0"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						MisProfesiones_InterficieOlvidar(self:GetParent().skillName);
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+	</Frame>
+
+	<Frame name="MisProfesionesFrame" toplevel="true" parent="UIParent" movable="true" enableMouse="true" hidden="true">
+		<Size x="350" y="380"/>
+		<Anchors>
+			<Anchor point="CENTER"/>
+		</Anchors>
+		
+		<Backdrop bgFile="" edgeFile="Interface\DialogFrame\UI-DialogBox-Gold-Border" tile="false">
+			<EdgeSize><AbsValue val="20"/></EdgeSize>
+		</Backdrop>
+		
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture file="Interface\AchievementFrame\UI-Achievement-Parchment-Horizontal">
+					<Anchors>
+						<Anchor point="TOPLEFT" x="6" y="-6"/>
+						<Anchor point="BOTTOMRIGHT" x="-6" y="6"/>
+					</Anchors>
+					<TexCoords left="0" right="1" top="0" bottom="0.9"/>
+				</Texture>
+			</Layer>
+
+			<Layer level="ARTWORK">
+				<FontString name="MisProfesionesTitle" inherits="GameFontNormalLarge" text="Mis Profesiones">
+					<Anchors>
+						<Anchor point="TOP" x="0" y="-18"/>
+					</Anchors>
+					<Color r="0.40" g="0.20" b="0.05"/>
+				</FontString>
+			</Layer>
+		</Layers>
+		
+		<Frames>
+			<Button inherits="UIPanelCloseButton">
+				<Anchors>
+					<Anchor point="TOPRIGHT" x="-2" y="-2"/>
+				</Anchors>
+			</Button>
+
+			<ScrollFrame name="MisProfesionesScrollFrame" inherits="UIPanelScrollFrameTemplate">
+				<Size x="285" y="280"/>
+				<Anchors>
+					<Anchor point="TOPLEFT" x="18" y="-50"/>
+				</Anchors>
+				<ScrollChild>
+					<Frame name="MisProfesionesScrollChild">
+						<Size x="285" y="10"/>
+						<Anchors>
+							<Anchor point="TOPLEFT"/>
+						</Anchors>
+					</Frame>
+				</ScrollChild>
+			</ScrollFrame>
+
+			<Button name="MisProfesionesLanguageDropDown" inherits="UIDropDownMenuTemplate">
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" x="5" y="14"/>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						UIDropDownMenu_Initialize(self, MisProfesiones_MenuIdioma_Initialize)
+						UIDropDownMenu_SetWidth(self, 90)
+						UIDropDownMenu_SetButtonWidth(self, 110)
+					</OnLoad>
+				</Scripts>
+			</Button>
+		</Frames>
+		
+		<Scripts>
+			<OnLoad>
+				self:RegisterForDrag("LeftButton");
+				self:RegisterEvent("SKILL_LINES_CHANGED");
+				self:RegisterEvent("ADDON_LOADED");
+			</OnLoad>
+			<OnDragStart>self:StartMoving();</OnDragStart>
+			<OnDragStop>self:StopMovingOrSizing();</OnDragStop>
+			<OnEvent>
+				if event == "SKILL_LINES_CHANGED" then
+					MisProfesiones_Actualizar();
+				elseif event == "ADDON_LOADED" and arg1 == "MisProfesiones" then
+					MisProfesiones_Inicializar();
+				end
+			</OnEvent>
+			<OnShow>
+				MisProfesiones_Actualizar();
+			</OnShow>
+		</Scripts>
+	</Frame>
+
+	<Button name="MisProfesionesBotonLibro" parent="UIParent" frameStrata="LOW" toplevel="true" movable="true" enableMouse="true">
+		<Size x="42" y="42"/>
+		<Anchors>
+			<Anchor point="CENTER" x="250" y="0"/>
+		</Anchors>
+		<Backdrop bgFile="Interface\Icons\INV_Misc_Book_09" edgeFile="Interface\Buttons\UI-SliderBar-Border" tile="false">
+			<EdgeSize><AbsValue val="6"/></EdgeSize>
+		</Backdrop>
+		<HighlightTexture file="Interface\Buttons\ButtonHilight-Square" alphaMode="ADD"/>
+		<Scripts>
+			<OnLoad>
+				self:RegisterForDrag("LeftButton")
+			</OnLoad>
+			<OnDragStart>self:StartMoving()</OnDragStart>
+			<OnDragStop>self:StopMovingOrSizing()</OnDragStop>
+			<OnClick>MisProfesiones_Toggle()</OnClick>
+			<OnEnter>MisProfesiones_MostrarTooltip()</OnEnter>
+			<OnLeave>GameTooltip:Hide()</OnLeave>
+		</Scripts>
+	</Button>
+</Ui>
