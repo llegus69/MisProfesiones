@@ -59,4 +59,5 @@ Controla el ciclo de vida del Addon mediante el registro de eventos clave del mo
 - **Olvidar Profesión:** Haz clic sobre la **X** situada a la derecha de la profesión. Aparecerá un cuadro de diálogo del sistema oficial preguntándote si estás seguro antes de proceder a borrar de forma irreversible la habilidad.
 
 ---
-<img width="1366" height="705" alt="Wow 2026-05-26 19-42-42" src="https://github.com/user-attachments/assets/1693015b-27bd-4f19-85d6-9f03e8be8df2" />
+<img width="1366" height="705" alt="WoWScrnShot_052726_175258" src="https://github.com/user-attachments/assets/a6ecf4d6-3681-40a9-9026-22ac921390b8" />
+
