@@ -1,8 +1,9 @@
 ## Interface: 30300
 ## Title: Mis Profesiones
-## Notes: Muestra todas las profesiones aprendidas en una sola ventana.
+## Notes: Muestra todas las profesiones aprendidas en una sola ventana con barra de progreso.
 ## Author: Lleguito
-## Version: 1.0
+## Version: 1.2
+## SavedVariables: MisProfesionesDB
 
 MisProfesiones.lua
 MisProfesiones.xml
