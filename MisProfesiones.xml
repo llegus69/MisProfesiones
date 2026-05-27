@@ -15,19 +15,35 @@
 				</Layers>
 			</Button>
 			
-			<Frame name="$parentNameFrame">
-				<Size x="180" y="20"/>
+			<StatusBar name="$parentStatusBar" inherits="TextStatusBar">
+				<Size x="190" y="16"/>
 				<Anchors>
 					<Anchor point="LEFT" relativeTo="$parentIcon" relativePoint="RIGHT" x="10" y="0"/>
 				</Anchors>
 				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture name="$parentBackground">
+							<Color r="0.0" g="0.0" b="0.0" a="0.5"/>
+						</Texture>
+					</Layer>
 					<Layer level="ARTWORK">
-						<FontString name="$parentText" inherits="GameFontHighlight" text="Profesión" justifyH="LEFT">
-							<Color r="0.25" g="0.12" b="0.02"/>
+						<FontString name="$parentNameText" inherits="GameFontHighlightSmall" text="Profesión" justifyH="LEFT">
+							<Anchors>
+								<Anchor point="LEFT" x="5" y="0"/>
+							</Anchors>
+							<Color r="1.0" g="1.0" b="1.0"/>
+						</FontString>
+						<FontString name="$parentRankText" inherits="GameFontHighlightSmall" text="0/0" justifyH="RIGHT">
+							<Anchors>
+								<Anchor point="RIGHT" x="-5" y="0"/>
+							</Anchors>
+							<Color r="1.0" g="1.0" b="1.0"/>
 						</FontString>
 					</Layer>
 				</Layers>
-			</Frame>
+				<BarTexture file="Interface\TargetingFrame\UI-StatusBar"/>
+				<BarColor r="0.25" g="0.75" b="0.25"/> 
+			</StatusBar>
 
 			<Button name="$parentUnlearnBtn" frameStrata="MEDIUM" toplevel="true" inherits="UIPanelButtonTemplate" text="X">
 				<Size x="22" y="22"/>
@@ -71,6 +87,13 @@
 					</Anchors>
 					<Color r="0.40" g="0.20" b="0.05"/>
 				</FontString>
+				
+				<FontString name="MisProfesionesCredits" inherits="GameFontNormalSmall" text="Creado por Lleguito">
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT" x="-22" y="20"/>
+					</Anchors>
+					<Color r="0.45" g="0.30" b="0.20"/>
+				</FontString>
 			</Layer>
 		</Layers>
 		
@@ -112,17 +135,22 @@
 		
 		<Scripts>
 			<OnLoad>
-				self:RegisterForDrag("LeftButton");
 				self:RegisterEvent("SKILL_LINES_CHANGED");
 				self:RegisterEvent("ADDON_LOADED");
 			</OnLoad>
-			<OnDragStart>self:StartMoving();</OnDragStart>
-			<OnDragStop>self:StopMovingOrSizing();</OnDragStop>
+			<OnMouseDown>
+				if arg1 == "LeftButton" then
+					self:StartMoving();
+				end
+			</OnMouseDown>
+			<OnMouseUp>
+				self:StopMovingOrSizing();
+			</OnMouseUp>
 			<OnEvent>
 				if event == "SKILL_LINES_CHANGED" then
 					MisProfesiones_Actualizar();
-				elseif event == "ADDON_LOADED" and arg1 == "MisProfesiones" then
-					MisProfesiones_Inicializar();
+				elseif event == "ADDON_LOADED" then
+					MisProfesiones_OnAddonLoaded(arg1);
 				end
 			</OnEvent>
 			<OnShow>
@@ -131,24 +159,55 @@
 		</Scripts>
 	</Frame>
 
-	<Button name="MisProfesionesBotonLibro" parent="UIParent" frameStrata="LOW" toplevel="true" movable="true" enableMouse="true">
-		<Size x="42" y="42"/>
+	<Button name="MisProfesionesMinimapButton" parent="Minimap" frameStrata="MEDIUM" toplevel="true" movable="true" enableMouse="true">
+		<Size x="33" y="33"/>
 		<Anchors>
-			<Anchor point="CENTER" x="250" y="0"/>
+			<Anchor point="CENTER" relativeTo="Minimap" relativePoint="CENTER" x="-80" y="0"/>
 		</Anchors>
-		<Backdrop bgFile="Interface\Icons\INV_Misc_Book_09" edgeFile="Interface\Buttons\UI-SliderBar-Border" tile="false">
-			<EdgeSize><AbsValue val="6"/></EdgeSize>
-		</Backdrop>
-		<HighlightTexture file="Interface\Buttons\ButtonHilight-Square" alphaMode="ADD"/>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentIcon" file="Interface\Icons\INV_Misc_Book_09">
+					<Size x="21" y="21"/>
+					<Anchors>
+						<Anchor point="CENTER" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<Texture file="Interface\Minimap\MiniMap-TrackingBorder">
+					<Size x="56" y="56"/>
+					<Anchors>
+						<Anchor point="CENTER" x="1" y="-1"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<HighlightTexture file="Interface\Minimap\UI-Minimap-ZoomButton-Highlight" alphaMode="ADD"/>
 		<Scripts>
 			<OnLoad>
+				self:RegisterForClicks("LeftButtonUp")
 				self:RegisterForDrag("LeftButton")
 			</OnLoad>
-			<OnDragStart>self:StartMoving()</OnDragStart>
-			<OnDragStop>self:StopMovingOrSizing()</OnDragStop>
-			<OnClick>MisProfesiones_Toggle()</OnClick>
-			<OnEnter>MisProfesiones_MostrarTooltip()</OnEnter>
-			<OnLeave>GameTooltip:Hide()</OnLeave>
+			<OnDragStart>
+				self.isDragging = true
+			</OnDragStart>
+			<OnDragStop>
+				self.isDragging = false
+			</OnDragStop>
+			<OnUpdate>
+				if self.isDragging then
+					MisProfesiones_Minimap_OnUpdate()
+				end
+			</OnUpdate>
+			<OnClick>
+				MisProfesiones_Toggle()
+			</OnClick>
+			<OnEnter>
+				MisProfesiones_MostrarTooltip(self)
+			</OnEnter>
+			<OnLeave>
+				GameTooltip:Hide()
+			</OnLeave>
 		</Scripts>
 	</Button>
 </Ui>
