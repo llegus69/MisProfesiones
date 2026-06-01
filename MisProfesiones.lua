@@ -1,4 +1,3 @@
-local myAddonName = ... -- Detecta automáticamente el nombre de la carpeta para evitar fallos
 local idiomaActual = 1
 local filas = {}
 
@@ -9,7 +8,7 @@ local Locales = {
         btnSi = "Sí, Olvidar",
         btnNo = "Cancelar",
         tooltipTitulo = "Mis Profesiones",
-        tooltipClickIzquierdo = "Clic Izquierdo: Abrir ventana\nArrastrar: Mover icono",
+        tooltipClickIzquierdo = "Clic Izquierdo: Abrir ventana / Arrastrar libro",
     },
     [2] = {
         titulo = "My Professions",
@@ -17,7 +16,7 @@ local Locales = {
         btnSi = "Yes, Unlearn",
         btnNo = "Cancel",
         tooltipTitulo = "My Professions",
-        tooltipClickIzquierdo = "Left Click: Open window\nDrag: Move icon",
+        tooltipClickIzquierdo = "Left Click: Open window / Drag book",
     }
 }
 
@@ -34,9 +33,15 @@ local BASE_PROFESIONES = {
     ["primeros auxilios"] = { spell = "Primeros auxilios", icon = "Interface\\Icons\\Spell_Holy_SealOfSacrifice" },
     ["minería"] = { spell = "Fundición", icon = "Interface\\Icons\\Trade_Mining" },
     ["fundición"] = { spell = "Fundición", icon = "Interface\\Icons\\Trade_Mining" },
-    ["herboristería"] = { spell = "Herboristería", icon = "Interface\\Icons\\Spell_Nature_NatureTouchToHeal" },
-    ["desuello"] = { spell = "Desuello", icon = "Interface\\Icons\\INV_Misc_Pelt_Wolf_01" },
-    ["desollar"] = { spell = "Desuello", icon = "Interface\\Icons\\INV_Misc_Pelt_Wolf_01" },
+    
+    -- CORRECCIÓN: Icono exacto inv_misc_flower_02 asignado a Herboristería
+    ["herboristería"] = { spell = "Buscar hierbas", icon = "Interface\\Icons\\inv_misc_flower_02" },
+    ["herboristeria"] = { spell = "Buscar hierbas", icon = "Interface\\Icons\\inv_misc_flower_02" },
+    ["Herboristería"] = { spell = "Buscar hierbas", icon = "Interface\\Icons\\inv_misc_flower_02" },
+    ["Herboristeria"] = { spell = "Buscar hierbas", icon = "Interface\\Icons\\inv_misc_flower_02" },
+    
+    ["desuello"] = { spell = "", icon = "Interface\\Icons\\INV_Misc_Pelt_Wolf_01" },
+    ["Desuello"] = { spell = "", icon = "Interface\\Icons\\INV_Misc_Pelt_Wolf_01" },
     ["pesca"] = { spell = "Pesca", icon = "Interface\\Icons\\Trade_Fishing" },
 
     ["alchemy"] = { spell = "Alchemy", icon = "Interface\\Icons\\Trade_Alchemy" },
@@ -51,28 +56,17 @@ local BASE_PROFESIONES = {
     ["first aid"] = { spell = "First Aid", icon = "Interface\\Icons\\Spell_Holy_SealOfSacrifice" },
     ["mining"] = { spell = "Smelting", icon = "Interface\\Icons\\Trade_Mining" },
     ["smelting"] = { spell = "Smelting", icon = "Interface\\Icons\\Trade_Mining" },
-    ["herbalism"] = { spell = "Herbalism", icon = "Interface\\Icons\\Spell_Nature_NatureTouchToHeal" },
-    ["skinning"] = { spell = "Skinning", icon = "Interface\\Icons\\INV_Misc_Pelt_Wolf_01" },
+    ["herbalism"] = { spell = "Find Herbs", icon = "Interface\\Icons\\inv_misc_flower_02" },
+    ["Herbalism"] = { spell = "Find Herbs", icon = "Interface\\Icons\\inv_misc_flower_02" },
+    ["skinning"] = { spell = "", icon = "Interface\\Icons\\INV_Misc_Pelt_Wolf_01" },
+    ["Skinning"] = { spell = "", icon = "Interface\\Icons\\INV_Misc_Pelt_Wolf_01" },
     ["fishing"] = { spell = "Fishing", icon = "Interface\\Icons\\Trade_Fishing" },
 }
 
-function MisProfesiones_OnAddonLoaded(loadedName)
-    if loadedName == myAddonName then
-        if not MisProfesionesDB then
-            MisProfesionesDB = { minimapPos = 45, idiomaActual = nil }
-        end
-
-        if MisProfesionesDB.idiomaActual then
-            idiomaActual = MisProfesionesDB.idiomaActual
-        else
-            local locale = GetLocale()
-            if locale == "enUS" or locale == "enGB" then idiomaActual = 2 else idiomaActual = 1 end
-            MisProfesionesDB.idiomaActual = idiomaActual
-        end
-
-        UIDropDownMenu_SetSelectedID(MisProfesionesLanguageDropDown, idiomaActual)
-        MisProfesiones_Minimap_Reposition()
-    end
+function MisProfesiones_Inicializar()
+    local locale = GetLocale()
+    if locale == "enUS" or locale == "enGB" then idiomaActual = 2 else idiomaActual = 1 end
+    UIDropDownMenu_SetSelectedID(MisProfesionesLanguageDropDown, idiomaActual)
 end
 
 function MisProfesiones_Toggle()
@@ -95,8 +89,14 @@ function MisProfesiones_Actualizar()
         local skillName, isHeader, _, skillRank, _, _, skillMaxRank = GetSkillLineInfo(i)
         
         if not isHeader and skillName then
-            local nombreClave = strlower(skillName)
-            local profData = BASE_PROFESIONES[nombreClave]
+            local profData = nil
+            local nombreClave = string.lower(skillName)
+            
+            if BASE_PROFESIONES[nombreClave] then
+                profData = BASE_PROFESIONES[nombreClave]
+            elseif BASE_PROFESIONES[skillName] then
+                profData = BASE_PROFESIONES[skillName]
+            end
 
             if profData then
                 if not filas[filaIndex] then
@@ -115,15 +115,26 @@ function MisProfesiones_Actualizar()
 
                 _G[filaName.."StatusBarNameText"]:SetText(skillName)
                 _G[filaName.."StatusBarRankText"]:SetText(skillRank .. " / " .. skillMaxRank)
-                _G[filaName.."IconTexture"]:SetTexture(profData.icon)
+                
+                local texObj = _G[filaName.."IconTexture"]
+                if texObj then
+                    texObj:SetTexture(profData.icon)
+                end
 
                 local statusBar = _G[filaName.."StatusBar"]
                 statusBar:SetMinMaxValues(0, skillMaxRank)
                 statusBar:SetValue(skillRank)
 
                 local iconBtn = _G[filaName.."Icon"]
-                iconBtn:SetAttribute("type", "spell")
-                iconBtn:SetAttribute("spell", profData.spell)
+                if iconBtn then
+                    if profData.spell and profData.spell ~= "" then
+                        iconBtn:SetAttribute("type", "spell")
+                        iconBtn:SetAttribute("spell", profData.spell)
+                    else
+                        iconBtn:SetAttribute("type", nil)
+                        iconBtn:SetAttribute("spell", nil)
+                    end
+                end
 
                 fila:Show()
                 filaIndex = filaIndex + 1
@@ -139,11 +150,11 @@ function MisProfesiones_InterficieOlvidar(nombreProfesion)
     if not nombreProfesion then return end
     
     local skillIndexReal = nil
-    local nombreBuscar = strlower(nombreProfesion)
+    local nombreBuscar = string.lower(nombreProfesion)
     
     for i = 1, GetNumSkillLines() do
         local skillName, isHeader = GetSkillLineInfo(i)
-        if not isHeader and skillName and strlower(skillName) == nombreBuscar then
+        if not isHeader and skillName and (string.lower(skillName) == nombreBuscar or skillName == nombreProfesion) then
             skillIndexReal = i
             break
         end
@@ -166,33 +177,9 @@ function MisProfesiones_InterficieOlvidar(nombreProfesion)
     StaticPopup_Show("CONFIRM_UNLEARN_PROFESSION_CUSTOM")
 end
 
--- Funciones del Minimapa
-function MisProfesiones_Minimap_OnUpdate()
-    local mx, my = GetCursorPosition()
-    local scale = Minimap:GetEffectiveScale()
-    mx, my = mx / scale, my / scale
-    local cx, cy = Minimap:GetCenter()
-    local angle = math.atan2(my - cy, mx - cx)
-    if MisProfesionesDB then
-        MisProfesionesDB.minimapPos = math.deg(angle)
-    end
-    MisProfesiones_Minimap_Reposition()
-end
-
-function MisProfesiones_Minimap_Reposition()
-    local angle = (MisProfesionesDB and MisProfesionesDB.minimapPos) or 45
-    local radius = 80
-    local x = radius * math.cos(math.rad(angle))
-    local y = radius * math.sin(math.rad(angle))
-    if MisProfesionesMinimapButton then
-        MisProfesionesMinimapButton:ClearAllPoints() -- EVITA SOLAPAMIENTO EN 3.3.5
-        MisProfesionesMinimapButton:SetPoint("CENTER", Minimap, "CENTER", x, y)
-    end
-end
-
-function MisProfesiones_MostrarTooltip(anchorFrame)
+function MisProfesiones_MostrarTooltip()
     local lang = Locales[idiomaActual]
-    GameTooltip:SetOwner(anchorFrame, "ANCHOR_LEFT")
+    GameTooltip:SetOwner(MisProfesionesBotonLibro, "ANCHOR_LEFT")
     GameTooltip:AddLine(lang.tooltipTitulo, 1, 1, 1)
     GameTooltip:AddLine(lang.tooltipClickIzquierdo, 0.2, 1, 0.2)
     GameTooltip:Show()
@@ -208,7 +195,6 @@ end
 
 function MisProfesiones_CambiarIdioma(self)
     idiomaActual = self.value
-    if MisProfesionesDB then MisProfesionesDB.idiomaActual = idiomaActual end
     UIDropDownMenu_SetSelectedID(MisProfesionesLanguageDropDown, idiomaActual)
     MisProfesiones_Actualizar()
 end
